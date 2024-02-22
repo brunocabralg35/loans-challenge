@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Loan Challenge</title>
+  </head>
+  <body class="flex flex-col w-full">
+    <div
+      class="flex flex-col justify-center items-center w-[400px] m-auto gap-3 mt-5"
+    >
+      <h2 class="text-xl font-bold">Faça sua verificação de empréstimos</h2>
+      <div class="flex flex-col gap-3 w-full">
+        <input
+          type="text"
+          placeholder="Nome"
+          class="border border-solid rounded-md py-2 pl-4"
+          id="name"
+        />
+        <input
+          type="number"
+          placeholder="CPF"
+          class="border border-solid rounded-md py-2 pl-4"
+          id="cpf"
+        />
+        <input
+          type="number"
+          placeholder="Idade"
+          class="border rounded-md py-2 pl-4"
+          id="age"
+        />
+        <input
+          type="number"
+          placeholder="Salário"
+          class="border rounded-md py-2 pl-4"
+          id="income"
+        />
+        <select
+          name="location"
+          id="location"
+          class="border rounded-md py-2 pl-4"
+        >
+          <option value="SP">SP</option>
+          <option value="GO">GO</option>
+          <option value="MG">MG</option>
+        </select>
+        <button
+          class="w-full border bg-slate-500 text-white py-3 rounded-md"
+          onclick="sendData()"
+        >
+          Verificar
+        </button>
+        <p class="text-red-500 hidden" id="error">Preencha todos os campos</p>
+      </div>
+    </div>
+
+    <div
+      id="verificationContent"
+      class="flex flex-col justify-center items-center w-[400px] m-auto gap-3 mt-5"
+    >
+      <h1 id="customer" class="font-bold text-xl"></h1>
+      <ul id="loanList" class="text-center"></ul>
+    </div>
+
+    <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
+    <script>
+      const sendData = () => {
+        const name = document.getElementById("name").value;
+        const cpf = document.getElementById("cpf").value;
+        const age = document.getElementById("age").value;
+        const income = document.getElementById("income").value;
+        const location = document.getElementById("location").value;
+
+        if (name === "" || cpf === "" || age === "" || income === "") {
+          document.getElementById("error").classList.remove("hidden");
+          return;
+        }
+
+        document.getElementById("error").classList.add("hidden");
+
+        axios
+          .post("http://localhost:3000/customer-loans", {
+            name,
+            cpf,
+            age,
+            income,
+            location,
+          })
+          .then((res) => seedVerication(res.data))
+          .catch((e) => {
+            console.log(e);
+          });
+      };
+
+      const seedVerication = (data) => {
+        document.getElementById("customer").innerText = "";
+        document.getElementById("loanList").innerText = "";
+        document.getElementById("customer").innerText = data.customer;
+
+        if (data.loans.length === 0) {
+          document.getElementById("loanList").innerText =
+            "Nenhum empréstimo disponível";
+        } else {
+          data.loans.forEach((loan) => {
+            const item = document.createElement("li");
+
+            var loanType = "";
+
+            switch (loan.type) {
+              case "PERSONAL":
+                loanType = "pessoal";
+                break;
+              case "GUARANTEED":
+                loanType = "com garantia";
+                break;
+              case "CONSIGNMENT":
+                loanType = "consignado";
+                break;
+
+              default:
+                break;
+            }
+
+            item.innerText = `Empréstimo ${loanType} | Taxa de ${loan.interest_rate}%`;
+
+            document.getElementById("loanList").appendChild(item);
+          });
+        }
+      };
+    </script>
+  </body>
+</html>
